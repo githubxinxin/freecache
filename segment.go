@@ -12,6 +12,7 @@ const ENTRY_HDR_SIZE = 24
 var ErrLargeKey = errors.New("The key is larger than 65535")
 var ErrLargeEntry = errors.New("The entry size is larger than 1/1024 of cache size")
 var ErrNotFound = errors.New("Entry not found")
+var ErrExpired = errors.New("Entry expired")
 
 // entry pointer struct points to an entry in ring buffer
 type entryPtr struct {
@@ -295,7 +296,7 @@ func (seg *segment) locate(key []byte, hashVal uint64, peek bool) (hdrEntry entr
 		if isExpired(hdr.expireAt, now) {
 			seg.delEntryPtr(slotId, slot, idx)
 			atomic.AddInt64(&seg.totalExpired, 1)
-			err = ErrNotFound
+			err = ErrExpired
 			atomic.AddInt64(&seg.missCount, 1)
 			return
 		}
